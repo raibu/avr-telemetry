@@ -1,5 +1,7 @@
 #include <mega8.h>
 #include <alcd.h>
+#include <delay.h>
+#include <stdio.h>
 #define DATA_REGISTER_EMPTY (1<<UDRE)
 #define RX_COMPLETE (1<<RXC)
 #define FRAMING_ERROR (1<<FE)
@@ -7,7 +9,8 @@
 #define DATA_OVERRUN (1<<DOR)
 #define RX_BUFFER_SIZE 8
 unsigned char rx_buffer[RX_BUFFER_SIZE];
-char lcd_buf[6][8];
+unsigned char lcd_buf[8];
+unsigned char bat_buf[16];
 
 #if RX_BUFFER_SIZE <= 256
 unsigned char rx_wr_index=0,rx_rd_index=0;
@@ -72,7 +75,7 @@ return data;
 #endif
 
 // Standard Input/Output functions
-#include <stdio.h>
+
 
 void main(void)
 {
@@ -96,33 +99,35 @@ while (1)
       {
       
       if(rx_buffer[0]=='S' && rx_buffer[7]=='E')
-      {#asm("cli")
-       volts[0]=(rx_buffer[1]*4.2/256);
-       volts[1]=((rx_buffer[2]*2-rx_buffer[1])*4.2/256);
-       volts[2]=((rx_buffer[3]*3-rx_buffer[2]*2)*4.2/256);
-       volts[3]=((rx_buffer[4]*4-rx_buffer[3]*3)*4.2/256);
-       volts[4]=((rx_buffer[5]*5-rx_buffer[4]*4)*4.2/256);
-       volts[5]=((rx_buffer[6]*6-rx_buffer[5]*5)*4.2/256);
-       volts[6]=(rx_buffer[6]*6*4.2/256);
-      #asm("sei")
-        sprintf(lcd_buf[0],"C1:%.2f ",volts[0]);
-        sprintf(lcd_buf[1],"C2:%.2f ",volts[1]);
-        sprintf(lcd_buf[2],"C3:%.2f ",volts[2]);
-        sprintf(lcd_buf[3],"C4:%.2f ",volts[3]);
-        sprintf(lcd_buf[4],"C5:%.2f ",volts[4]);
-        sprintf(lcd_buf[5],"C6:%.2f ",volts[5]);
-        sprintf(lcd_buf[6],"WHOLE_BAT:%.2f ",volts[5]);
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-       }
-
-      }
+         {
+            #asm("cli")
+            volts[0]=(rx_buffer[1]*5.0/256);
+            volts[1]=((rx_buffer[2]*2-rx_buffer[1])*5.0/256);
+            volts[2]=((rx_buffer[3]*3-rx_buffer[2]*2)*5.0/256);
+            volts[3]=((rx_buffer[4]*4-rx_buffer[3]*3)*5.0/256);
+            volts[4]=((rx_buffer[5]*5-rx_buffer[4]*4)*5.0/256);
+            volts[5]=((rx_buffer[6]*6-rx_buffer[5]*5)*5.0/256);
+            volts[6]=(rx_buffer[6]*30.0/256);
+            #asm("sei")   
+            lcd_gotoxy(0,0);
+            sprintf(lcd_buf,"C1:%.2f ",volts[0]);
+            lcd_puts(lcd_buf);
+            sprintf(lcd_buf,"C2:%.2f ",volts[1]);
+            lcd_puts(lcd_buf);
+            sprintf(lcd_buf,"C3:%.2f ",volts[2]);
+            lcd_puts(lcd_buf);
+            sprintf(lcd_buf,"C4:%.2f ",volts[3]);
+            lcd_puts(lcd_buf);
+            delay_ms(1900);  
+            lcd_clear();
+            lcd_gotoxy(0,0);
+            sprintf(lcd_buf,"C5:%.2f ",volts[4]);
+            lcd_puts(lcd_buf);
+            sprintf(lcd_buf,"C6:%.2f ",volts[5]);
+            lcd_puts(lcd_buf);
+            sprintf(bat_buf,"WHOLE BAT:%.2f ",volts[6]); 
+            lcd_puts(bat_buf);
+            delay_ms(1900);
+        }
+   }
 }
